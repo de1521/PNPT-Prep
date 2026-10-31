@@ -21,3 +21,8 @@ Everything here is general methodology and public tools — the stuff that's on 
 ## Still a work in progress
 
 Same as me. I add to it after every study session.
+
+
+Credits
+
+The notes, methodology, and the mistakes are my own, from doing the labs myself. I used AI assistance to help format and build these documents and the interactive map.
