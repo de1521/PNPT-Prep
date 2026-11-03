@@ -8,7 +8,7 @@ I learn by doing, not by reading, so this isn't a tutorial. It's a fast referenc
 
 - **`pnpt-methodology.md`** — the full attack chain, phase by phase, with the commands I reach for and the mistakes I kept making (they're marked with ⚠).
 - **`cheatsheets/`** — deeper notes on the parts that gave me the most trouble: moving files between Kali and Windows, and the Windows credential attacks (SAM, hashes, pass-the-hash).
-- **Interactive map** — the same methodology as a webpage you can search and click through. (Live link goes here once Pages is enabled — see below.)
+- **Interactive map** — the same methodology as a webpage you can search and click through.  https://de1521.github.io/PNPT-Prep/
 - - **Windows PrivEsc Attack Map** — an interactive map of Windows privilege-escalation techniques: https://de1521.github.io/PNPT-Prep/windows-privesc-map.html
 
 ## Who this is for
