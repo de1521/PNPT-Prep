@@ -10,6 +10,7 @@ I learn by doing, not by reading, so this isn't a tutorial. It's a fast referenc
 - **`cheatsheets/`** — deeper notes on the parts that gave me the most trouble: moving files between Kali and Windows, and the Windows credential attacks (SAM, hashes, pass-the-hash).
 - **Interactive map** — the same methodology as a webpage you can search and click through.  https://de1521.github.io/PNPT-Prep/
 - - **Windows PrivEsc Attack Map** — an interactive map of Windows privilege-escalation techniques: https://de1521.github.io/PNPT-Prep/windows-privesc-map.html
+  - - **Rogue Potato Attack Map** — SeImpersonate → SYSTEM, step by step: https://de1521.github.io/PNPT-Prep/rogue-potato-map.html
 
 ## Who this is for
 
