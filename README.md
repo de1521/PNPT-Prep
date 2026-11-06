@@ -11,6 +11,7 @@ I learn by doing, not by reading, so this isn't a tutorial. It's a fast referenc
 - **Interactive map** — the same methodology as a webpage you can search and click through.  https://de1521.github.io/PNPT-Prep/
 - - **Windows PrivEsc Attack Map** — an interactive map of Windows privilege-escalation techniques: https://de1521.github.io/PNPT-Prep/windows-privesc-map.html
   - - **Rogue Potato Attack Map** — SeImpersonate → SYSTEM, step by step: https://de1521.github.io/PNPT-Prep/rogue-potato-map.html
+    - - **PrintSpoofer Attack Map** — SeImpersonate → SYSTEM via the Print Spooler: https://de1521.github.io/PNPT-Prep/printspoofer-map.html
 
 ## Who this is for
 
