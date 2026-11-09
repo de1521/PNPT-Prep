@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wreath — Webserver Compromise | CVE-2019-15107</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111c2e; --panel2:#0e1826; --ink:#e6edf5; --muted:#93a4bb;
+    --teal:#14b8a6; --teal-d:#0f766e; --purple:#a78bfa; --amber:#f59e0b; --red:#f87171;
+    --green:#34d399; --line:#1e2d44; --code:#0a1120;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 70% -10%,#14233b 0%,var(--bg) 55%);color:var(--ink);line-height:1.6;}
+  .wrap{max-width:1060px;margin:0 auto;padding:28px 18px 80px;}
+  /* Hero */
+  .hero{border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#102235,#0c1626);
+    padding:30px 28px;position:relative;overflow:hidden;}
+  .hero:before{content:"";position:absolute;inset:0;background:
+    radial-gradient(500px 180px at 85% 0%,rgba(20,184,166,.18),transparent 70%);pointer-events:none;}
+  .tagpill{display:inline-block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--teal);border:1px solid var(--teal-d);border-radius:999px;padding:4px 12px;margin-bottom:14px;}
+  h1{margin:.1em 0 .1em;font-size:30px;letter-spacing:-.02em;}
+  .sub{color:var(--muted);font-size:16px;max-width:640px;}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+  .chip{font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--muted);}
+  .chip b{color:var(--ink);font-weight:600;}
+  /* Network diagram */
+  .net{margin:26px 0 8px;border:1px solid var(--line);border-radius:16px;background:var(--panel2);padding:22px;}
+  .net h3{margin:0 0 4px;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .net .sub2{color:var(--muted);font-size:13px;margin-bottom:18px;}
+  .topo{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;}
+  .node{flex:1;min-width:150px;border:1px solid var(--line);border-radius:12px;background:var(--panel);
+    padding:14px;text-align:center;position:relative;}
+  .node .ic{font-size:26px;}
+  .node .nm{font-weight:700;margin-top:6px;}
+  .node .ip{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--muted);margin-top:2px;}
+  .node .role{font-size:11.5px;color:var(--muted);margin-top:6px;}
+  .node.owned{border-color:var(--teal-d);box-shadow:0 0 0 1px rgba(20,184,166,.25) inset;}
+  .node.owned .nm{color:var(--teal);}
+  .node.hidden{border-style:dashed;opacity:.72;}
+  .arrow{display:flex;align-items:center;justify-content:center;min-width:46px;color:var(--teal);font-size:22px;}
+  .arrow small{display:block;font-size:9.5px;color:var(--muted);text-align:center;}
+  .legend{margin-top:14px;font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap;}
+  .legend span b{color:var(--teal);}
+  /* Chain */
+  .sech{margin:34px 2px 14px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+  .card{border:1px solid var(--line);border-radius:14px;background:var(--panel);margin-bottom:12px;overflow:hidden;}
+  .card > button{all:unset;display:flex;align-items:center;gap:14px;width:100%;cursor:pointer;padding:16px 18px;}
+  .card > button:hover{background:#13213550;}
+  .num{flex:none;width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal-d),#0b5f57);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#d7fff7;}
+  .ctitle{flex:1;}
+  .ctitle .t{display:block;font-weight:700;font-size:16px;}
+  .ctitle .d{display:block;color:var(--muted);font-size:13px;margin-top:2px;}
+  .caret{color:var(--muted);transition:transform .2s;font-size:14px;}
+  .card.open .caret{transform:rotate(90deg);}
+  .body{display:none;padding:2px 18px 20px;border-top:1px solid var(--line);}
+  .card.open .body{display:block;}
+  .body p{margin:14px 0 10px;color:#cdd8e8;font-size:14.5px;}
+  .lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-weight:700;margin:16px 0 6px;}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:13px 14px;overflow:auto;margin:0;}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#b9f5ea;}
+  .flags{list-style:none;padding:0;margin:12px 0 2px;}
+  .flags li{display:flex;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:13.5px;}
+  .flags li:last-child{border-bottom:0;}
+  .flags .f{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--amber);flex:none;min-width:116px;}
+  .flags .m{color:#cdd8e8;}
+  .note{margin-top:14px;border-left:3px solid var(--teal);background:#0f2a2740;border-radius:0 8px 8px 0;padding:10px 14px;font-size:13.5px;color:#d7e6e3;}
+  .note.win{border-color:var(--green);background:#0f2a1e40;}
+  .note.warn{border-color:var(--amber);background:#2a200f40;}
+  /* Lessons */
+  .lessons{margin-top:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);padding:4px 20px 20px;}
+  .lessons h3{color:var(--amber);font-size:17px;}
+  .trap{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line);}
+  .trap:last-child{border-bottom:0;}
+  .trap .x{flex:none;font-size:18px;}
+  .trap .tt{font-weight:600;}
+  .trap .td{color:var(--muted);font-size:13.5px;}
+  .trap code{color:#ffd9a8;}
+  /* Footer */
+  footer{margin-top:34px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.8;}
+  footer b{color:var(--teal);}
+  a{color:var(--teal);}
+  @media(max-width:620px){.arrow{transform:rotate(90deg);min-width:auto;padding:4px 0;}.topo{flex-direction:column;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <span class="tagpill">Wreath · Machine 1 · Pivot Box</span>
+    <h1>Webserver Compromise — CVE-2019-15107</h1>
+    <p class="sub">From an external IP to <b style="color:var(--teal)">persistent root</b> on Thomas Wreath's public web server <code>prod-serv</code>, by abusing a backdoored Webmin 1.890. The first link in the pivot chain.</p>
+    <div class="meta">
+      <span class="chip"><b>Target</b> 10.200.180.200 (prod-serv)</span>
+      <span class="chip"><b>OS</b> CentOS</span>
+      <span class="chip"><b>Service</b> Webmin MiniServ 1.890 · :10000</span>
+      <span class="chip"><b>Exploit</b> Unauthenticated RCE → root</span>
+      <span class="chip"><b>Result</b> uid=0 + SSH key persistence</span>
+    </div>
+  </div>
+
+  <!-- NETWORK DIAGRAM -->
+  <div class="net">
+    <h3>The network — why this machine matters</h3>
+    <div class="sub2">Only the webserver faces the internet. Own it, and it becomes the <b style="color:var(--teal)">bridge</b> to the two hidden internal machines.</div>
+    <div class="topo">
+      <div class="node">
+        <div class="ic">🐉</div><div class="nm">Kali — "Red"</div>
+        <div class="ip">AttackBox</div><div class="role">The attacker</div>
+      </div>
+      <div class="arrow">➜<small>internet</small></div>
+      <div class="node owned">
+        <div class="ic">🔓</div><div class="nm">prod-serv</div>
+        <div class="ip">10.200.180.200</div><div class="role">Webserver · OWNED (root)</div>
+      </div>
+      <div class="arrow">➜<small>internal only</small></div>
+      <div class="node hidden">
+        <div class="ic">🗄️</div><div class="nm">git-serv</div>
+        <div class="ip">hidden</div><div class="role">No internet route</div>
+      </div>
+      <div class="node hidden">
+        <div class="ic">💻</div><div class="nm">personal-PC</div>
+        <div class="ip">hidden</div><div class="role">Windows · no internet route</div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><b>■</b> Owned &nbsp;·&nbsp; <b style="color:var(--muted)">▢</b> Hidden (reachable only through prod-serv)</span>
+    </div>
+  </div>
+
+  <div class="sech">▸ The attack chain — tap any step</div>
+
+  <!-- STEP 1 -->
+  <div class="card">
+    <button onclick="t(this)"><span class="num">1</span><span class="ctitle"><span class="t">Recon — find the open doors</span><span class="d">Full TCP port scan of all 65,535 ports</span></span><span class="caret">▶</span></button>
+    <div class="body">
+      <p>A default scan only checks the top 1,000 ports — it would miss Webmin on <b>10000</b>. Scanning every port is what surfaces the real way in.</p>
+      <div class="lbl">Command</div>
+      <pre><code>nmap -Pn -p- -T4 --min-rate 1000 -oN webserver.txt 10.200.180.200</code></pre>
+      <ul class="flags">
+        <li><span class="f">-Pn</span><span class="m">Skip host-discovery ping; assume the host is up.</span></li>
+        <li><span class="f">-p-</span><span class="m">Scan ALL 65,535 ports (not just the top 1,000).</span></li>
+        <li><span class="f">-T4 --min-rate 1000</span><span class="m">Push speed up so the full scan finishes fast.</span></li>
+        <li><span class="f">-oN webserver.txt</span><span class="m">Save the output to a file.</span></li>
+      </ul>
+      <div class="note win"><b>Open ports found:</b> 22 (SSH) · 80 (HTTP) · 443 (HTTPS) · <b>10000 (Webmin)</b> — the catch, only visible because of <code>-p-</code>.</div>
+      <div class="note warn"><b>Lesson lived:</b> over a lossy VPN, <code>--min-rate 1000</code> can make packets drop and every port read "filtered." If that happens, slow to <code>-T3</code> (or lower the rate) so answers come back.</div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card">
+    <button onclick="t(this)"><span class="num">2</span><span class="ctitle"><span class="t">Enumerate — identify the versions</span><span class="d">Service/version detection on the open ports</span></span><span class="caret">▶</span></button>
+    <div class="body">
+      <p>Port numbers tell you which doors exist; <b>versions</b> tell you the brand of each lock — and that's what you look up for a known exploit.</p>
+      <div class="lbl">Command</div>
+      <pre><code>nmap -Pn -sV -p 22,80,443,10000 -T4 -oN webserver_detail.txt 10.200.180.200</code></pre>
+      <ul class="flags">
+        <li><span class="f">-sV</span><span class="m">Service/version detection — the exact software + version per port.</span></li>
+        <li><span class="f">-p 22,80,443,10000</span><span class="m">Scan only the ports we already found open (fast + gentle).</span></li>
+      </ul>
+      <div class="note"><b>Key findings:</b> <code>10000 → MiniServ 1.890 (Webmin httpd)</code> · <code>80/443 → Apache 2.4.37 (centos)</code> → OS = <b>CentOS</b> (the banner leaks the OS).</div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="card">
+    <button onclick="t(this)"><span class="num">3</span><span class="ctitle"><span class="t">Footprint — read the website (OSINT)</span><span class="d">Resolve the host, accept the cert, mine the CV page</span></span><span class="caret">▶</span></button>
+    <div class="body">
+      <p>The site redirects to <code>thomaswreath.thm</code> but there's no DNS, so you add the name → IP mapping to your own address book first.</p>
+      <div class="lbl">Command</div>
+      <pre><code>echo "10.200.180.200 thomaswreath.thm" >> /etc/hosts</code></pre>
+      <ul class="flags">
+        <li><span class="f">&gt;&gt;</span><span class="m">APPEND a line to the file. A single <code>&gt;</code> would overwrite /etc/hosts and break networking.</span></li>
+        <li><span class="f">/etc/hosts</span><span class="m">Local name→IP table, checked before DNS.</span></li>
+      </ul>
+      <div class="note"><b>OSINT harvested</b> from the CV page: full name, home address, email, and <b>mobile +447821548812</b> — all ammunition for password-guessing and phishing. A personal site is a goldmine.</div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="card">
+    <button onclick="t(this)"><span class="num">4</span><span class="ctitle"><span class="t">Research — map version → exploit</span><span class="d">Find the known RCE for Webmin 1.890</span></span><span class="caret">▶</span></button>
+    <div class="body">
+      <p>Search the local exploit database for the exact version.</p>
+      <div class="lbl">Command</div>
+      <pre><code>searchsploit webmin 1.890</code></pre>
+      <ul class="flags">
+        <li><span class="f">searchsploit</span><span class="m">Offline copy of Exploit-DB, built into Kali — no internet needed.</span></li>
+      </ul>
+      <div class="note warn"><b>CVE-2019-15107 — a supply-chain backdoor.</b> Webmin 1.890 was compromised at its <b>build server</b>: malicious code was slipped into the official release, adding an <b>unauthenticated</b> command-injection in <code>password_change.cgi</code> that runs as <b>root</b>. (Exactly why you only pull tools from trusted, official sources.)</div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="card">
+    <button onclick="t(this)"><span class="num">5</span><span class="ctitle"><span class="t">Exploit — manual RCE → root</span><span class="d">Clone the author's PoC and fire it</span></span><span class="caret">▶</span></button>
+    <div class="body">
+      <p>Done manually (not Metasploit) — the PNPT exam limits Metasploit to a single use, so build the manual muscle.</p>
+      <div class="lbl">Commands</div>
+      <pre><code>git clone https://github.com/MuirlandOracle/CVE-2019-15107
+cd CVE-2019-15107
+python3 -m pip install -r requirements.txt
+python3 CVE-2019-15107.py 10.200.180.200</code></pre>
+      <ul class="flags">
+        <li><span class="f">git clone</span><span class="m">Copy the exploit repo (by the room's own author = trusted source).</span></li>
+        <li><span class="f">python3 -m pip</span><span class="m">Install deps into the SAME python that runs the script (fixes "ModuleNotFoundError").</span></li>
+        <li><span class="f">CVE-2019-15107.py &lt;ip&gt;</span><span class="m">Runs the exploit; port 10000 + SSL handled automatically.</span></li>
+      </ul>
+      <div class="note win"><b>Result:</b> a pseudoshell → <code>whoami = root</code>, <code>uid=0(root)</code>. No privilege escalation needed — the backdoor already runs as root. 👑</div>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="card">
+    <button onclick="t(this)"><span class="num">6</span><span class="ctitle"><span class="t">Loot — grab the secrets</span><span class="d">Password hash + the SSH private key</span></span><span class="caret">▶</span></button>
+    <div class="body">
+      <p>As root you can read everything. Two prizes: the password hash (a flag) and — more usefully — root's SSH key.</p>
+      <div class="lbl">Commands</div>
+      <pre><code>cat /etc/shadow            # root $6$ (SHA-512) hash
+cat /root/.ssh/id_rsa      # root's SSH PRIVATE key  ← the real prize</code></pre>
+      <div class="note"><b>Hash structure</b> <code>$6$ salt $ hash</code> — <code>$6$</code> = SHA-512, salted → effectively uncrackable. So don't crack it: use the <b>key</b> instead.</div>
+      <div class="note warn"><b>Slip to avoid:</b> typing the key's path alone runs it as a program → "Permission denied." You <b>read</b> a key with <code>cat</code>, you don't execute it.</div>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="card">
+    <button onclick="t(this)"><span class="num">7</span><span class="ctitle"><span class="t">Persist — stable root via SSH key</span><span class="d">Save the key, lock it, log in</span></span><span class="caret">▶</span></button>
+    <div class="body">
+      <p>The pseudoshell is fragile. The stolen SSH key gives a solid, repeatable root login — true persistence, and your launchpad for pivoting.</p>
+      <div class="lbl">Commands</div>
+      <pre><code>nano webserver_key                         # paste the full BEGIN…END key
+chmod 600 webserver_key
+ssh -i webserver_key root@10.200.180.200</code></pre>
+      <ul class="flags">
+        <li><span class="f">chmod 600</span><span class="m">Owner read/write only. SSH REFUSES a world-readable private key.</span></li>
+        <li><span class="f">ssh -i &lt;key&gt;</span><span class="m">Authenticate with the key file instead of a password.</span></li>
+      </ul>
+      <div class="note win"><b>Result:</b> <code>[root@prod-serv ~]#</code> — stable root shell on tap, even if Webmin is patched or rebooted. Persistence achieved.</div>
+    </div>
+  </div>
+
+  <!-- STEP 8 -->
+  <div class="card">
+    <button onclick="t(this)"><span class="num">8</span><span class="ctitle"><span class="t">Next — pivot through prod-serv</span><span class="d">Use the owned webserver as a bridge</span></span><span class="caret">▶</span></button>
+    <div class="body">
+      <p>git-serv and personal-PC have <b>no route from the internet</b> — Kali can't touch them directly. The webserver has a foot in both networks, so you tunnel your tools <b>through</b> it to reach the hidden machines.</p>
+      <div class="note"><b>Office-building analogy:</b> prod-serv is the street-facing reception desk; the internal machines are locked back offices with no street door. You own reception → you use its internal hallways to reach the back offices. <i>That's pivoting — the next chapter.</i></div>
+    </div>
+  </div>
+
+  <!-- LESSONS -->
+  <div class="lessons">
+    <h3>⚠️ Lessons learned the hard way</h3>
+    <div class="trap"><span class="x">🧊</span><div><div class="tt">Frozen lab, every port "filtered"</div><div class="td">Scans returned all-filtered + ping = 100% loss. A box left running for days freezes. Fix: hit <code>Reset</code> on the network panel (reboots, same IPs) — not "Regenerate" (new IPs). Diagnose infra vs. self: scan → ping → check the connection panel.</div></div></div>
+    <div class="trap"><span class="x">🏃</span><div><div class="tt">Too fast = dropped packets</div><div class="td"><code>--min-rate 1000</code> over a lossy VPN loses packets and fakes "filtered." Slow to <code>-T3</code> and answers come back.</div></div></div>
+    <div class="trap"><span class="x">🧰</span><div><div class="tt">pip3 vs python3 — wrong toolbox</div><div class="td"><code>ModuleNotFoundError</code> after installing? pip3 and python3 can be different interpreters. Use <code>python3 -m pip install …</code> to install into the one that runs the script.</div></div></div>
+    <div class="trap"><span class="x">📄</span><div><div class="tt">cat the key, don't run it</div><div class="td">Typing <code>/root/.ssh/id_rsa</code> alone tries to EXECUTE it → "Permission denied." Read it with <code>cat</code>.</div></div></div>
+    <div class="trap"><span class="x">➡️</span><div><div class="tt">&gt;&gt; appends, &gt; overwrites</div><div class="td">Editing <code>/etc/hosts</code>: two arrows add a line; one arrow wipes the file. Muscle memory worth keeping.</div></div></div>
+  </div>
+
+  <footer>
+    <div><b>Wreath — Webserver Compromise</b> · CVE-2019-15107 · part of the PNPT-Prep attack-map series</div>
+    <div>Built by <b>Red</b> for hands-on PNPT study · built with AI assistance</div>
+    <div>Licensed under <b>CC BY-NC 4.0</b> — free to use &amp; share with credit, not for sale · <b>No real exam content (NDA)</b> · Generic methodology only</div>
+  </footer>
+
+</div>
+<script>
+  function t(btn){btn.parentElement.classList.toggle('open');}
+  // open the first card by default
+  document.querySelector('.card').classList.add('open');
+</script>
+</body>
+</html>
