@@ -12,6 +12,7 @@ I learn by doing, not by reading, so this isn't a tutorial. It's a fast referenc
 - - **Windows PrivEsc Attack Map** — an interactive map of Windows privilege-escalation techniques: https://de1521.github.io/PNPT-Prep/windows-privesc-map.html
   - - **Rogue Potato Attack Map** — SeImpersonate → SYSTEM, step by step: https://de1521.github.io/PNPT-Prep/rogue-potato-map.html
     - - **PrintSpoofer Attack Map** — SeImpersonate → SYSTEM via the Print Spooler: https://de1521.github.io/PNPT-Prep/printspoofer-map.html
+       - - **Wreath Webserver Attack Map** — recon → exploit → persistent root on the Wreath webserver (CVE-2019-15107): https://de1521.github.io/PNPT-Prep/wreath-webserver-map.html
 
 ## Who this is for
 
