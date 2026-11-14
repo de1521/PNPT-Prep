@@ -13,9 +13,7 @@ I learn by doing, not by reading, so this isn't a tutorial. It's a fast referenc
   - - **Rogue Potato Attack Map** — SeImpersonate → SYSTEM, step by step: https://de1521.github.io/PNPT-Prep/rogue-potato-map.html
     - - **PrintSpoofer Attack Map** — SeImpersonate → SYSTEM via the Print Spooler: https://de1521.github.io/PNPT-Prep/printspoofer-map.html
        - - **Wreath Webserver Attack Map** — recon → exploit → persistent root on the Wreath webserver (CVE-2019-15107): https://de1521.github.io/PNPT-Prep/wreath-webserver-map.html
-         -   - **Pivoting Map** — interactive reference for tunnelling through a compromised machine (ssh -L/-R/-D, proxychains, socat, chisel): https://de1521.github.io/PNPT-Prep/pivoting-map(2).html
-             -  **cheatsheets/pivoting.md** — the pivoting toolkit: enumeration, SSH tunnels, plink, socat (incl. OpenSSL-encrypted pipes), and chisel — with the when & why for each.
-
+         -  
 ## Who this is for-
 
 Mostly me. But if you're also grinding toward the PNPT and you think in terms of "what do I run next," it might save you some time too. Corrections welcome.
