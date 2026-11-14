@@ -15,6 +15,10 @@ I learn by doing, not by reading, so this isn't a tutorial. It's a fast referenc
        - - **Wreath Webserver Attack Map** — recon → exploit → persistent root on the Wreath webserver (CVE-2019-15107): https://de1521.github.io/PNPT-Prep/wreath-webserver-map.html
          - - **Pivoting Map** — interactive reference for tunnelling through a compromised machine (ssh -L/-R/-D, proxychains, socat, chisel): https://de1521.github.io/PNPT-Prep/pivoting-map.html
            - - **pivoting.md** — the pivoting toolkit: enumeration, SSH tunnels, plink, socat (incl. OpenSSL-encrypted pipes), and chisel — with the when & why for each.
+             - - **File Transfer Map** — moving files Kali↔Windows: https://de1521.github.io/PNPT-Prep/file-transfer-map.html
+- **SAM Dump & Crack Map** — dumping & cracking local Windows hashes: https://de1521.github.io/PNPT-Prep/sam-map.html
+- **Windows Credential Attacks Map** — AutoLogon / saved creds / SAM / Pass-the-Hash: https://de1521.github.io/PNPT-Prep/windows-credentials-map.html
+- **PNPT Exam Checklist Map** — the 11-phase attack chain: https://de1521.github.io/PNPT-Prep/pnpt-checklist-map.html
          -  
 ## Who this is for-
 
